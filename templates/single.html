@@ -1,0 +1,12 @@
+<div class="row">
+    <div class="col-sm-12">
+        <h2>{{post.title.rendered}}</h2>
+        <dl class="post-meta" ng-show="author">
+           <dt>Posted</dt>
+            <dd>{{post.date}}</dd>
+            <dt>Posted By</dt>
+            <dd>{{author.name}}</dd>
+        </dl>
+        <div ng-bind-html="post.content.rendered | to_trusted"></div>
+    </div>
+</div>

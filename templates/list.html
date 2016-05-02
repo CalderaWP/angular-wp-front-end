@@ -1,0 +1,18 @@
+<div class="row">
+    <div class="col-sm-12">
+        <h2>List View</h2>
+        <div class="row">
+            <article class="row" ng-repeat="post in posts">
+                <div class="col-sm-5">
+                    <h3>{{post.title.rendered}}</h3>
+                </div>
+                <div class="col-sm-3">
+                    {{post.date}}
+                </div>
+                <div class="col-sm-4">
+                    <a class="btn btn-primary btn-block" ui-sref="single({slug:post.slug})">View</a>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
