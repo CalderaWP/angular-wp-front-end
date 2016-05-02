@@ -2690,8 +2690,8 @@ c.charAt(0)?c:b+c})});k.defaults.stripTrailingSlashes&&(c=c.replace(/\/+$/,"")||
 J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("isState",J).filter("includedByState",K)}(window,window.angular);
 var ngWP = ngWP || {};
 
-ngWP.wp_site = 'http://local.wordpress.dev';
-ngWP.wp_api_url = 'http://local.wordpress.dev/wp-json/';
+ngWP.wp_site = 'INSERT YOUR SITE HERE';
+ngWP.wp_api_url = 'INSERT YOUR API URL HERE';
 
 
 ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router'] )
