@@ -18,6 +18,7 @@
   "homepage": "https://github.com/CalderaWP/angular-wp-front-end#readme",
   "devDependencies": {
     "angular": "^1.5.5",
+    "angular-local-storage": "^0.2.7",
     "angular-resource": "^1.5.5",
     "angular-ui-router": "^0.2.18",
     "bootstrap-sass": "^3.3.6",
