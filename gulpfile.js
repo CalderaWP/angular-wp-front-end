@@ -25,6 +25,7 @@ var jsFileList = [
     './node_modules/angular-resource/angular-resource.min.js',
     './node_modules/angular-ui-router/release/angular-ui-router.min.js',
     './node_modules/angular-local-storage/dist/angular-local-storage.min.js',
+    './node_modules/angular-utils-pagination/dirPagination.js',
     './assets/js/angular-front-end-app.js',
 ];
 
@@ -44,7 +45,7 @@ gulp.task('js', function(){
         .pipe(gulp.dest('./build/js'));
 });
 
-gulp.task('default', function(){
+gulp.task('default', ['sass', 'js'], function(){
     gulp.watch( './assets/scss/*.scss', ['sass'] );
     gulp.watch( './assets/js/**/*.js', ['js'] );
 });
