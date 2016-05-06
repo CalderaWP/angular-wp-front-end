@@ -6,40 +6,16 @@ ngWP.wp_site = 'http://local.wordpress.dev';
 ngWP.wp_api_url = 'http://local.wordpress.dev/wp-json/';
 
 
-ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'LocalStorageModule'] )
+ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'LocalStorageModule', 'angularUtils.directives.dirPagination'] )
     .run(function( $rootScope ){
         console.log('app init');
     })
-    .config(['localStorageServiceProvider', function( localStorageServiceProvider ) {
+    .config(
+        ['localStorageServiceProvider', 'paginationTemplateProvider', '$stateProvider', '$urlRouterProvider',
+        function( localStorageServiceProvider, paginationTemplateProvider, $stateProvider,$urlRouterProvider ) {
         localStorageServiceProvider.setPrefix('wp');
-    }])
-    .filter( 'to_trusted', function( $sce ){
-        return function( text ){
-            return $sce.trustAsHtml( text );
-        }
-    })
-    .factory('Posts',function($resource){
-        return $resource( ngWP.wp_api_url + 'wp/v2/posts/:ID' , {
-            ID:'@id'
-        });
-    })
-    .factory( 'LocalPosts', function( $http, $resource, localStorageService, Posts ) {
-        localPostObj = {
-            query: function( data ) {
-                if( localStorageService.get('posts') ) {
-                    return localStorageService.get('posts');
-                } else {
-                    return Posts.query(data, function(res){
-                        localStorageService.set( 'posts', res );
-                        return res;
-                    });
-                }
-            }
-        };
+        paginationTemplateProvider.setPath('./build/js/pagination.tpl.html');
 
-        return localPostObj;
-    })
-    .config(function($stateProvider,$urlRouterProvider){
         $urlRouterProvider.otherwise('/');
         $stateProvider
             .state('list',{
@@ -52,9 +28,67 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                 controller:'singleView',
                 templateUrl: 'templates/single.html'
             })
+    }])
+    .filter( 'to_trusted', function( $sce ){
+        return function( text ){
+            return $sce.trustAsHtml( text );
+        }
+    })
+    .factory('Posts',function($resource){
+        return $resource( ngWP.wp_api_url + 'wp/v2/posts/:ID?filter[posts_per_page]=30' , {
+            ID:'@id'
+        });
+    })
+    .factory( 'LocalPosts', function( $http, $resource, localStorageService, Posts, $q ) {
+        localPostObj = {
+            query: function( data ) {
+                if( localStorageService.get('posts') ) {
+                    return localStorageService.get('posts');
+                } else {
+                    return Posts.query(data, function(res){
+                        localStorageService.set( 'posts', res );
+                        return res;
+                    });
+                }
+            },
+            getPage: function( data ) {
+                if( !data || !data.page ) {
+                    return false;
+                }
+                var deferred = $q.defer();
+
+                Posts.query(data, function(res){
+                    var current_posts = localStorageService.get('posts');
+                    angular.forEach( res, function( value, key ) {
+                        current_posts.push( value );
+                    });
+                    localStorageService.set( 'posts', current_posts );
+                    deferred.resolve( res );
+                });
+                return deferred.promise;
+            }
+        };
+
+        return localPostObj;
     })
     .controller('listView', ['$scope', '$http', 'LocalPosts', 'localStorageService', function( $scope, $http, LocalPosts, localStorageService ){
         $scope.posts = LocalPosts.query();
+        $scope.pagination = {
+            current: 1
+        };
+
+        $scope.pageChanged = function( newPage ) {
+            $scope.total_pages = $scope.posts.length / 10;
+            if (newPage == $scope.total_pages) {
+                LocalPosts.getPage({page: 2}).then(function (new_posts) {
+                    console.log(new_posts);
+                    angular.forEach(new_posts, function (value, key) {
+                        console.log(value);
+                        $scope.posts.push(value);
+                    });
+                });
+            };
+        };
     }])
     .controller('singleView', ['$scope', '$http', 'Posts', '$stateParams', 'localStorageService', function( $scope, $http, Posts, $stateParams, localStorageService ){
 
