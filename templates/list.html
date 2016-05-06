@@ -3,7 +3,7 @@
         <h2>List View</h2>
         <div class="row">
             <div class="col-sm-12">
-                <article class="row" dir-paginate="post in posts | itemsPerPage: 10" current-page="pagination.current">
+                <article class="row" dir-paginate="post in posts | itemsPerPage: posts_per_page" current-page="pagination.current">
                     <div class="col-sm-7">
                         <h3>{{post.title.rendered}}</h3>
                     </div>

@@ -35,22 +35,42 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
         }
     })
     .factory('Posts',function($resource){
-        return $resource( ngWP.wp_api_url + 'wp/v2/posts/:ID?filter[posts_per_page]=30' , {
-            ID:'@id'
+        return $resource( ngWP.wp_api_url + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page' , {
+            ID:'@id',
+            per_page: '@per_page'
         });
     })
     .factory( 'LocalPosts', function( $http, $resource, localStorageService, Posts, $q ) {
         localPostObj = {
             query: function( data ) {
+                /**
+                 * Check localStorage first
+                 */
                 if( localStorageService.get('posts') ) {
                     return localStorageService.get('posts');
                 } else {
+                    /**
+                     * If no per_page set, default to 30
+                     */
+                    if( data && !data.per_page ) {
+                        data.per_page = 30;
+                    }
+                    if( !data ) {
+                        data = {
+                            per_page: 30
+                        };
+                    }
                     return Posts.query(data, function(res){
                         localStorageService.set( 'posts', res );
                         return res;
                     });
                 }
             },
+            /**
+             * Get a specific page number based on per_page
+             * @param data
+             * @returns {*}
+             */
             getPage: function( data ) {
                 if( !data || !data.page ) {
                     return false;
@@ -72,21 +92,33 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
         return localPostObj;
     })
     .controller('listView', ['$scope', '$http', 'LocalPosts', 'localStorageService', function( $scope, $http, LocalPosts, localStorageService ){
-        $scope.posts = LocalPosts.query();
+        /**
+         * Set Posts Per Page (Pagination)
+         * @type {number}
+         */
+        $scope.posts_per_page = 5;
+
+        $scope.next_page = 2;
+        $scope.posts = LocalPosts.query({per_page: [$scope.posts_per_page * 3]});
         $scope.pagination = {
             current: 1
         };
 
+        /**
+         * Page Change
+         * Find total pages, if on last page, query next page
+         * Next page query is next 3 pages
+         * @param newPage
+         */
         $scope.pageChanged = function( newPage ) {
-            $scope.total_pages = $scope.posts.length / 10;
+            $scope.total_pages = $scope.posts.length / $scope.posts_per_page;
             if (newPage == $scope.total_pages) {
-                LocalPosts.getPage({page: 2}).then(function (new_posts) {
-                    console.log(new_posts);
+                LocalPosts.getPage({page: $scope.next_page, per_page: $scope.posts_per_page * 3}).then(function (new_posts) {
                     angular.forEach(new_posts, function (value, key) {
-                        console.log(value);
                         $scope.posts.push(value);
                     });
                 });
+                $scope.next_page++;
             };
         };
     }])
