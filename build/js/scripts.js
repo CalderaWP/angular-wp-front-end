@@ -3338,11 +3338,11 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
 })();
 
 var ngWP = ngWP || {};
+ngWP.config = {
+    api: 'http://v-jpress.dev/wp-json/',
+    menu: 'app'
+};
 
-// ngWP.wp_site = 'INSERT YOUR SITE HERE';
-// ngWP.wp_api_url = 'INSERT YOUR API URL HERE';
-ngWP.wp_site = 'http://local.wordpress.dev';
-ngWP.wp_api_url = 'http://local.wordpress.dev/wp-json/';
 
 
 ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'LocalStorageModule', 'angularUtils.directives.dirPagination'] )
@@ -3374,7 +3374,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
         }
     })
     .factory('Posts',function($resource){
-        return $resource( ngWP.wp_api_url + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page' , {
+        return $resource( ngWP.config.api + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page' , {
             ID:'@id',
             per_page: '@per_page'
         });
@@ -3465,8 +3465,18 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
 
         Posts.query({slug:$stateParams.slug}, function(res){
             $scope.post = res[0];
-            $http.get(ngWP.wp_api_url + 'wp/v2/users/' + $scope.post.author ).then(function(res){
+            $http.get(ngWP.config.api + 'wp/v2/users/' + $scope.post.author ).then(function(res){
                 $scope.author = res.data;
             });
         });
+    }]).controller('header', ['$scope', '$http', function ($scope, $http ) {
+
+        $http({
+            url: ngWP.config.api
+        } ).success( function( res ){
+            $scope.site = {};
+            $scope.site.name = res.name;
+            $scope.site.desc = res.description;
+        });
+
     }]);

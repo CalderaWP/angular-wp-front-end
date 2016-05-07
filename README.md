@@ -4,5 +4,17 @@ This is a decoupled but powered by WordPress Angular app. It is a simple boilerp
 ## Installation ##
 * Clone/Fork
 * Run `npm install`
+* Create a config file in `assets/js/config.js`
 * Run `gulp`
-* Open up `./assets/js/angular-front-end-app.js` and modify `ngWP.site_url` and `ngWP.api_url` to match your configuration_
+* Open up `./assets/js/angular-front-end-app.js`
+
+## Config File ##
+Your `assets/js/config.js` config file should create an object called ngWP with an index called config, with indexes for "api" and "menu" for example:
+
+```
+    var ngWP = ngWP || {};
+    ngWP.config = {
+        api: 'http://v-jpress.dev/wp-json/',
+        menu: 'app'
+    };
+```
