@@ -3340,7 +3340,8 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
 var ngWP = ngWP || {};
 ngWP.config = {
     api: 'http://v-jpress.dev/wp-json/',
-    menu: 'primary'
+    menu: 'primary',
+    posts_per_page: 10
 };
 
 
@@ -3367,6 +3368,11 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                 controller:'singleView',
                 templateUrl: 'templates/single.html'
             })
+            .state('author',{
+                url:'/author/:author',
+                controller:'authorView',
+                templateUrl: 'templates/list.html'
+            })
     }])
     .filter( 'to_trusted', function( $sce ){
         return function( text ){
@@ -3374,9 +3380,10 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
         }
     })
     .factory('Posts',function($resource){
-        return $resource( ngWP.config.api + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page' , {
+        return $resource( ngWP.config.api + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page&filter[post_author]:author' , {
             ID:'@id',
-            per_page: '@per_page'
+            per_page: '@per_page',
+            author: '@author'
         });
     })
     .factory( 'LocalPosts', function( $http, $resource, localStorageService, Posts, $q ) {
@@ -3439,6 +3446,40 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
 
         $scope.next_page = 2;
         $scope.posts = LocalPosts.query({per_page: [$scope.posts_per_page * 3]});
+        $scope.pagination = {
+            current: 1
+        };
+
+        /**
+         * Page Change
+         * Find total pages, if on last page, query next page
+         * Next page query is next 3 pages
+         * @param newPage
+         */
+        $scope.pageChanged = function( newPage ) {
+            $scope.total_pages = $scope.posts.length / $scope.posts_per_page;
+            if (newPage == $scope.total_pages) {
+                LocalPosts.getPage({page: $scope.next_page, per_page: $scope.posts_per_page * 3}).then(function (new_posts) {
+                    angular.forEach(new_posts, function (value, key) {
+                        $scope.posts.push(value);
+                    });
+                });
+                $scope.next_page++;
+            };
+        };
+    }])
+    .controller('authorView', ['$scope', '$http', '$stateParams', 'Posts', 'localStorageService', function( $scope, $http, $stateParams, Posts, localStorageService ){
+        /**
+         * Set Posts Per Page (Pagination)
+         * @type {number}
+         */
+        $scope.posts_per_page = 5;
+
+        $scope.next_page = 2;
+        $scope.posts = Posts.query({
+            per_page: ngWP.posts_per_page,
+            author: $stateParams.author
+        });
         $scope.pagination = {
             current: 1
         };
