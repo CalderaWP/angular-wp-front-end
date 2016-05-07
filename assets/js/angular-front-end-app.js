@@ -124,4 +124,15 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                 $scope.author = res.data;
             });
         });
-    }]);
+    }]).controller('header', ['$scope', '$http', function ($scope, $http ) {
+
+        $http({
+            url: ngWP.config.api
+        } ).success( function( res ){
+            $scope.site = {};
+            $scope.site.name = res.name;
+            $scope.site.desc = res.description;
+        });
+
+    }])
+;

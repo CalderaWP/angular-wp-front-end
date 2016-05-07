@@ -3340,7 +3340,7 @@ J.$inject=["$state"],K.$inject=["$state"],b.module("ui.router.state").filter("is
 var ngWP = ngWP || {};
 ngWP.config = {
     api: 'http://v-jpress.dev/wp-json/',
-    menu: 'app'
+    menu: 'primary'
 };
 
 
@@ -3479,4 +3479,5 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
             $scope.site.desc = res.description;
         });
 
-    }]);
+    }])
+;
