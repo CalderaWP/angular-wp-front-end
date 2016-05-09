@@ -99,15 +99,14 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                     return false;
                 }
                 var deferred = $q.defer();
+                var current_posts = localStorageService.get( 'posts' );
                 data.per_page = 1;
-                Posts.query(data, function(res){
-                    var current_posts = localStorageService.get('posts');
-                    angular.forEach( current_posts, function( value, key ) {
-                        if( res[0].id == value.id ) {
-                            deferred.resolve( res[0] );
-                        }
-                    });
-                });
+                for( var i = 0; i < current_posts.length; i++ ) {
+                    if( current_posts[i].slug == data.slug ) {
+                        deferred.resolve( current_posts[i] );
+                        break;
+                    }
+                };
                 return deferred.promise;
             }
         };
@@ -148,7 +147,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
              * @type {number}
              */
             $scope.total_available_pages = $scope.total_posts / $scope.posts_per_page;
-            
+
             if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
                 LocalPosts.getPage({page: $scope.next_page, per_page: $scope.posts_per_page * 3}).then(function (new_posts) {
                     angular.forEach(new_posts, function (value, key) {
@@ -159,15 +158,17 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
             };
         };
     }])
-    .controller('singleView', ['$scope', '$http', 'Posts', '$stateParams', 'localStorageService', function( $scope, $http, Posts, $stateParams, localStorageService ){
+    .controller('singleView', ['$scope', '$http', 'Posts', 'LocalPosts', '$stateParams', 'localStorageService', function( $scope, $http, Posts, LocalPosts, $stateParams, localStorageService ){
 
-        Posts.query({slug:$stateParams.slug}, function(res){
-            $scope.post = res[0];
+        LocalPosts.getSingle({slug:$stateParams.slug}).then(function(res){
+            $scope.post = res;
             $http.get(ngWP.config.api + 'wp/v2/users/' + $scope.post.author ).then(function(res){
                 $scope.author = res.data;
             });
         });
-    }]).controller('header', ['$scope', '$http', function ($scope, $http ) {
+
+    }])
+    .controller('header', ['$scope', '$http', function ($scope, $http ) {
 
         $http({
             url: ngWP.config.api
