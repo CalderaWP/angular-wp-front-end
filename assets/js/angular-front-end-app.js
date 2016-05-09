@@ -3,6 +3,7 @@
 ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'LocalStorageModule', 'angularUtils.directives.dirPagination'] )
     .run(function( $rootScope ){
         console.log('app init');
+        $rootScope.posts_per_page = ngWP.config.posts_per_page;
     })
     .config(
         ['localStorageServiceProvider', 'paginationTemplateProvider', '$stateProvider', '$urlRouterProvider',
@@ -34,7 +35,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
         }
     })
     .factory('Posts',function($resource){
-        return $resource( ngWP.config.api + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page&filter[post_author]:author' , {
+        return $resource( ngWP.config.api + 'wp/v2/posts/:ID?filter[posts_per_page]=:per_page&filter[post_author]=:author' , {
             ID:'@id',
             per_page: '@per_page',
             author: '@author'
@@ -119,16 +120,14 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
 
         return localPostObj;
     })
+    /**
+     * List Posts View
+     */
     .controller('listView', ['$scope', '$http', 'LocalPosts', 'localStorageService', function( $scope, $http, LocalPosts, localStorageService ){
-        /**
-         * Set Posts Per Page (Pagination)
-         * @type {number}
-         */
-        $scope.posts_per_page = 5;
-        $scope.posts = [];
 
+        $scope.posts = [];
         $scope.next_page = 2;
-        $scope.posts = LocalPosts.query({per_page: [$scope.posts_per_page * 3]}).then(function(res){
+        $scope.posts = LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3]}).then(function(res){
             $scope.total_posts = res.total_posts;
             $scope.posts = res.posts;
             $scope.pagination = {
@@ -147,15 +146,15 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
              * How many pages based on current amount of posts
              * @type {number}
              */
-            $scope.total_current_pages = $scope.posts.length / $scope.posts_per_page;
+            $scope.total_current_pages = $scope.posts.length / ngWP.config.posts_per_page;
             /**
              * How many total available pages
              * @type {number}
              */
-            $scope.total_available_pages = $scope.total_posts / $scope.posts_per_page;
+            $scope.total_available_pages = $scope.total_posts / ngWP.config.posts_per_page;
 
             if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
-                LocalPosts.getPage({page: $scope.next_page, per_page: $scope.posts_per_page * 3}).then(function (new_posts) {
+                LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3}).then(function (new_posts) {
                     angular.forEach(new_posts, function (value, key) {
                         $scope.posts.push(value);
                     });
@@ -164,41 +163,11 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
             };
         };
     }])
-    .controller('authorView', ['$scope', '$http', '$stateParams', 'Posts', 'localStorageService', function( $scope, $http, $stateParams, Posts, localStorageService ){
-        /**
-         * Set Posts Per Page (Pagination)
-         * @type {number}
-         */
-        $scope.posts_per_page = 5;
-
-        $scope.next_page = 2;
-        $scope.posts = Posts.query({
-            per_page: ngWP.posts_per_page,
-            author: $stateParams.author
-        });
-        $scope.pagination = {
-            current: 1
-        };
-
-        /**
-         * Page Change
-         * Find total pages, if on last page, query next page
-         * Next page query is next 3 pages
-         * @param newPage
-         */
-        $scope.pageChanged = function( newPage ) {
-            $scope.total_pages = $scope.posts.length / $scope.posts_per_page;
-            if (newPage == $scope.total_pages) {
-                LocalPosts.getPage({page: $scope.next_page, per_page: $scope.posts_per_page * 3}).then(function (new_posts) {
-                    angular.forEach(new_posts, function (value, key) {
-                        $scope.posts.push(value);
-                    });
-                });
-                $scope.next_page++;
-            };
-        };
-    }])
-    .controller('singleView', ['$scope', '$http', 'Posts', '$stateParams', 'localStorageService', function( $scope, $http, Posts, $stateParams, localStorageService ){
+    /**
+     * Single Post View
+     */
+    .controller('singleView', ['$scope', '$http', 'Posts', 'LocalPosts', '$stateParams', 'localStorageService',
+        function( $scope, $http, Posts, LocalPosts, $stateParams, localStorageService ){
 
         LocalPosts.getSingle({slug:$stateParams.slug}).then(function(res){
             $scope.post = res;
@@ -207,6 +176,47 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
             });
         });
 
+    }])
+    .controller('authorView', ['$scope', '$http', '$stateParams', 'Posts', 'LocalPosts', 'localStorageService',
+        function( $scope, $http, $stateParams, Posts, LocalPosts, localStorageService ){
+
+        $scope.posts = [];
+        $scope.next_page = 2;
+        $scope.posts = LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3], author: $stateParams.author}).then(function(res){
+            $scope.total_posts = res.total_posts;
+            $scope.posts = res.posts;
+            $scope.pagination = {
+                current: 1
+            };
+        });
+
+        /**
+         * Page Change
+         * Find total pages, if on last page, query next page
+         * Next page query is next 3 pages
+         * @param newPage
+         */
+        $scope.pageChanged = function( newPage ) {
+            /**
+             * How many pages based on current amount of posts
+             * @type {number}
+             */
+            $scope.total_current_pages = $scope.posts.length / ngWP.config.posts_per_page;
+            /**
+             * How many total available pages
+             * @type {number}
+             */
+            $scope.total_available_pages = $scope.total_posts / ngWP.config.posts_per_page;
+
+            if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
+                LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3}).then(function (new_posts) {
+                    angular.forEach(new_posts, function (value, key) {
+                        $scope.posts.push(value);
+                    });
+                });
+                $scope.next_page++;
+            };
+        };
     }])
     .controller('header', ['$scope', '$http', function ($scope, $http ) {
 
