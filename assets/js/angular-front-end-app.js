@@ -43,28 +43,40 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
     .factory( 'LocalPosts', function( $http, $resource, localStorageService, Posts, $q ) {
         localPostObj = {
             query: function( data ) {
-                /**
-                 * Check localStorage first
-                 */
-                if( localStorageService.get('posts') ) {
-                    return localStorageService.get('posts');
-                } else {
+                var deferred = $q.defer();
+                var more_data = {},
+                    posts_res = {};
+                Posts.query(data, function(res, status, headers, config){
+                    var posts_res = res,
+                        more_data = status();
                     /**
-                     * If no per_page set, default to 30
+                     * Check localStorage first
                      */
-                    if( data && !data.per_page ) {
-                        data.per_page = 30;
+                    if( localStorageService.get('posts') ) {
+                        deferred.resolve({
+                            posts: localStorageService.get('posts'),
+                            total_posts: more_data['x-wp-total']
+                        });
+                    } else {
+                        /**
+                         * If no per_page set, default to 30
+                         */
+                        if( data && !data.per_page ) {
+                            data.per_page = 30;
+                        }
+                        if( !data ) {
+                            data = {
+                                per_page: 30
+                            };
+                        }
+                        localStorageService.set( 'posts', posts_res );
+                        deferred.resolve({
+                            posts: posts_res,
+                            total_posts: more_data['x-wp-total']
+                        });
                     }
-                    if( !data ) {
-                        data = {
-                            per_page: 30
-                        };
-                    }
-                    return Posts.query(data, function(res){
-                        localStorageService.set( 'posts', res );
-                        return res;
-                    });
-                }
+                });
+                return deferred.promise;
             },
             /**
              * Get a specific page number based on per_page
@@ -86,6 +98,22 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                     deferred.resolve( res );
                 });
                 return deferred.promise;
+            },
+
+            getSingle: function( data ) {
+                if( !data || !data.slug ) {
+                    return false;
+                }
+                var deferred = $q.defer();
+                var current_posts = localStorageService.get( 'posts' );
+                data.per_page = 1;
+                for( var i = 0; i < current_posts.length; i++ ) {
+                    if( current_posts[i].slug == data.slug ) {
+                        deferred.resolve( current_posts[i] );
+                        break;
+                    }
+                };
+                return deferred.promise;
             }
         };
 
@@ -97,12 +125,16 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
          * @type {number}
          */
         $scope.posts_per_page = 5;
+        $scope.posts = [];
 
         $scope.next_page = 2;
-        $scope.posts = LocalPosts.query({per_page: [$scope.posts_per_page * 3]});
-        $scope.pagination = {
-            current: 1
-        };
+        $scope.posts = LocalPosts.query({per_page: [$scope.posts_per_page * 3]}).then(function(res){
+            $scope.total_posts = res.total_posts;
+            $scope.posts = res.posts;
+            $scope.pagination = {
+                current: 1
+            };
+        });
 
         /**
          * Page Change
@@ -111,8 +143,18 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
          * @param newPage
          */
         $scope.pageChanged = function( newPage ) {
-            $scope.total_pages = $scope.posts.length / $scope.posts_per_page;
-            if (newPage == $scope.total_pages) {
+            /**
+             * How many pages based on current amount of posts
+             * @type {number}
+             */
+            $scope.total_current_pages = $scope.posts.length / $scope.posts_per_page;
+            /**
+             * How many total available pages
+             * @type {number}
+             */
+            $scope.total_available_pages = $scope.total_posts / $scope.posts_per_page;
+
+            if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
                 LocalPosts.getPage({page: $scope.next_page, per_page: $scope.posts_per_page * 3}).then(function (new_posts) {
                     angular.forEach(new_posts, function (value, key) {
                         $scope.posts.push(value);
@@ -158,13 +200,15 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
     }])
     .controller('singleView', ['$scope', '$http', 'Posts', '$stateParams', 'localStorageService', function( $scope, $http, Posts, $stateParams, localStorageService ){
 
-        Posts.query({slug:$stateParams.slug}, function(res){
-            $scope.post = res[0];
+        LocalPosts.getSingle({slug:$stateParams.slug}).then(function(res){
+            $scope.post = res;
             $http.get(ngWP.config.api + 'wp/v2/users/' + $scope.post.author ).then(function(res){
                 $scope.author = res.data;
             });
         });
-    }]).controller('header', ['$scope', '$http', function ($scope, $http ) {
+
+    }])
+    .controller('header', ['$scope', '$http', function ($scope, $http ) {
 
         $http({
             url: ngWP.config.api
