@@ -27,7 +27,9 @@ var jsFileList = [
     './node_modules/angular-local-storage/dist/angular-local-storage.min.js',
     './node_modules/angular-utils-pagination/dirPagination.js',
     './assets/js/config.js',
-    './assets/js/angular-front-end-app.js'
+    './assets/js/angular-front-end-app.js',
+    './assets/js/factories/*.js',
+    './assets/js/controllers/*.js'
 ];
 
 gulp.task('sass', function() {
