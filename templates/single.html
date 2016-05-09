@@ -6,7 +6,9 @@
            <dt>Posted</dt>
             <dd>{{post.date}}</dd>
             <dt>Posted By</dt>
-            <dd>{{author.name}}</dd>
+            <dd>
+                <a ui-sref="author({author:author.slug})">{{author.name}}</a>
+            </dd>
         </dl>
         <div ng-bind-html="post.content.rendered | to_trusted"></div>
     </div>
