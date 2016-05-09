@@ -3527,9 +3527,10 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
 
         $scope.posts = [];
         $scope.next_page = 2;
-        $scope.posts = LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3], author: $stateParams.author}).then(function(res){
-            $scope.total_posts = res.total_posts;
-            $scope.posts = res.posts;
+        $http.get( ngWP.config.api + 'wp/v2/posts/?filter[posts_per_page]=' + ngWP.config.posts_per_page*3 + '&filter[post_author]=' + $stateParams.author ).then(function(res){
+            $scope.total_posts = res.headers();
+            $scope.total_posts = $scope.total_posts['x-wp-total']
+            $scope.posts = res.data;
             $scope.pagination = {
                 current: 1
             };
@@ -3554,8 +3555,9 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
             $scope.total_available_pages = $scope.total_posts / ngWP.config.posts_per_page;
 
             if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
-                LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3}).then(function (new_posts) {
-                    angular.forEach(new_posts, function (value, key) {
+                $http.get(ngWP.config.api + 'wp/v2/posts/?page=' + $scope.next_page + '&filter[posts_per_page]=' + ngWP.config.posts_per_page*3 + '&filter[post_author]=' + $stateParams.author )
+                    .then(function(new_posts){
+                    angular.forEach(new_posts.data, function (value, key) {
                         $scope.posts.push(value);
                     });
                 });
