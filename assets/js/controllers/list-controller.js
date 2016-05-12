@@ -36,7 +36,7 @@ ngWP.app.controller('listView', ['$scope', '$http', '$stateParams', 'LocalPosts'
         $scope.total_available_pages = $scope.total_posts / ngWP.config.posts_per_page;
 
         if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
-            LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3, post_type: $scope.post_type}).then(function (new_posts) {
+            LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3}).then(function (new_posts) {
                 angular.forEach(new_posts, function (value, key) {
                     $scope.posts.push(value);
                 });

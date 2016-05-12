@@ -1,13 +1,14 @@
 ngWP.app
     .factory('Posts',function($resource){
-        return $resource( ngWP.config.api + 'wp/v2/:post_type/:ID?filter[posts_per_page]=:per_page&filter[post_author]=:author', {
+        return $resource( ngWP.config.api + 'wp/v2/:post_type/:ID?filter[posts_per_page]=:per_page&filter[post_author]=:author&categories=:category', {
             /**
              * without @ is default value
              */
             post_type: 'posts',
             ID:'@id',
             per_page: ngWP.config.posts_per_page,
-            author: '@author'
+            author: '@author',
+            category: '@category'
         });
     })
     .factory( 'LocalPosts', function( $http, $resource, localStorageService, Posts, $q ) {
@@ -22,6 +23,16 @@ ngWP.app
                 Posts.query(data, function(res, status, headers, config){
                     var posts_res = res,
                         more_data = status();
+                    /**
+                     * If category
+                     */
+                    if( data.category ) {
+                        deferred.resolve({
+                            posts: posts_res,
+                            total_posts: more_data['x-wp-total']
+                        });
+                        return deferred.promise;
+                    }
                     /**
                      * Check localStorage first
                      */
@@ -53,8 +64,19 @@ ngWP.app
                     data.post_type = 'posts';
                 }
                 var deferred = $q.defer();
-
                 Posts.query(data, function(res){
+
+                    /**
+                     * If category
+                     */
+                    if( data.category ) {
+                        deferred.resolve({
+                            posts: posts_res,
+                            total_posts: more_data['x-wp-total']
+                        });
+                        return deferred.promise;
+                    }
+
                     var current_posts = localStorageService.get('posts[' + data.post_type + ']');
                     angular.forEach( res, function( value, key ) {
                         current_posts.push( value );
@@ -64,7 +86,11 @@ ngWP.app
                 });
                 return deferred.promise;
             },
-
+            /**
+             * Get Single Post (any post type)
+             * @param data
+             * @returns {*}
+             */
             getSingle: function( data ) {
                 if( !data || !data.slug || !data.post_type ) {
                     return false;
