@@ -1,16 +1,15 @@
 /**
  * List Posts View
  */
-ngWP.app.controller('listView', ['$scope', '$http', 'LocalPosts', 'localStorageService', function( $scope, $http, LocalPosts, localStorageService ){
+ngWP.app.controller('listView', ['$scope', '$http', '$stateParams', 'LocalPosts', 'localStorageService', function( $scope, $http, $stateParams, LocalPosts, localStorageService ){
     /**
      * Set a controller wide CPT
      * @type {string}
      */
-    //$scope.post_type = 'posts';
 
     $scope.posts = [];
     $scope.next_page = 2;
-    $scope.posts = LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3], post_type: $scope.post_type}).then(function(res){
+    $scope.posts = LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3], post_type: $stateParams.post_type}).then(function(res){
         $scope.total_posts = res.total_posts;
         $scope.posts = res.posts;
         $scope.pagination = {

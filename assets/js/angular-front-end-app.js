@@ -11,19 +11,24 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
 
         $urlRouterProvider.otherwise('/');
         $stateProvider
-            .state('list',{
-                url:'/',
+            .state('archive',{
+                url:'/:post_type',
                 controller:'listView',
                 templateUrl: 'templates/list.html'
             })
             .state('single',{
-                url:'/post/:slug',
+                url:'/:cpt/:slug',
                 controller:'singleView',
                 templateUrl: 'templates/single.html'
             })
             .state('author',{
                 url:'/author/:author',
                 controller:'authorView',
+                templateUrl: 'templates/list.html'
+            })
+            .state('category',{
+                url:'/category/:term',
+                controller: 'termView',
                 templateUrl: 'templates/list.html'
             })
     }])
@@ -38,7 +43,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
     .controller('singleView', ['$scope', '$http', 'LocalPosts', '$stateParams', 'localStorageService',
         function( $scope, $http, LocalPosts, $stateParams, localStorageService ){
 
-        LocalPosts.getSingle({slug:$stateParams.slug}).then(function(res){
+        LocalPosts.getSingle({slug:$stateParams.slug, post_type:$stateParams.cpt}).then(function(res){
             $scope.post = res;
             $http.get(ngWP.config.api + 'wp/v2/users/' + $scope.post.author ).then(function(res){
                 $scope.author = res.data;
@@ -48,6 +53,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
     }])
     .controller('authorView', ['$scope', '$http', '$stateParams', 'Posts', 'LocalPosts', 'localStorageService',
         function( $scope, $http, $stateParams, Posts, LocalPosts, localStorageService ){
+            console.log( 'loading author ' + $stateParams.author );
 
         $scope.posts = [];
         $scope.next_page = 2;
