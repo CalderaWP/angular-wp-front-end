@@ -11,8 +11,8 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
 
         $urlRouterProvider.otherwise('/');
         $stateProvider
-            .state('list',{
-                url:'/',
+            .state('archive',{
+                url:'/:post_type',
                 controller:'listView',
                 templateUrl: 'templates/list.html'
             })
@@ -53,6 +53,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
     }])
     .controller('authorView', ['$scope', '$http', '$stateParams', 'Posts', 'LocalPosts', 'localStorageService',
         function( $scope, $http, $stateParams, Posts, LocalPosts, localStorageService ){
+            console.log( 'loading author ' + $stateParams.author );
 
         $scope.posts = [];
         $scope.next_page = 2;
