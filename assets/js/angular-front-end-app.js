@@ -7,7 +7,7 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
         ['localStorageServiceProvider', 'paginationTemplateProvider', '$stateProvider', '$urlRouterProvider',
         function( localStorageServiceProvider, paginationTemplateProvider, $stateProvider,$urlRouterProvider ) {
         localStorageServiceProvider.setPrefix('wp');
-        paginationTemplateProvider.setPath('./build/js/pagination.tpl.html');
+        paginationTemplateProvider.setPath('./templates/pagination.tpl.html');
 
         $urlRouterProvider.otherwise('/');
         $stateProvider
