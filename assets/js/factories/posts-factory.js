@@ -66,11 +66,14 @@ ngWP.app
             },
 
             getSingle: function( data ) {
-                if( !data || !data.slug ) {
+                if( !data || !data.slug || !data.post_type ) {
                     return false;
                 }
+                if( data.post_type == 'post' ) {
+                    data.post_type = 'posts';
+                }
                 var deferred = $q.defer();
-                var current_posts = localStorageService.get( 'posts.posts' );
+                var current_posts = localStorageService.get( 'posts[' + data.post_type + ']' );
                 data.per_page = 1;
                 for( var i = 0; i < current_posts.length; i++ ) {
                     if( current_posts[i].slug == data.slug ) {
