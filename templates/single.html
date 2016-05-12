@@ -9,6 +9,10 @@
             <dd>
                 <a ui-sref="author({author:author.slug})">{{author.name}}</a>
             </dd>
+            <dt>Categories</dt>
+            <dd>
+                <a ng-repeat="cat in cats" ui-sref="category({term:cat.slug})">{{cat.name}} </a>
+            </dd>
         </dl>
         <div ng-bind-html="post.content.rendered | to_trusted"></div>
     </div>

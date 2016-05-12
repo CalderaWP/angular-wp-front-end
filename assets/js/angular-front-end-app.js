@@ -1,7 +1,22 @@
 ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'LocalStorageModule', 'angularUtils.directives.dirPagination'] )
-    .run(function( $rootScope ){
+    .run(function( $rootScope, localStorageService, $http ){
         console.log('app init');
         $rootScope.posts_per_page = ngWP.config.posts_per_page;
+
+        /** Localize Categories **/
+        $http.get(ngWP.config.api + 'wp/v2/categories' ).then(function(res){
+            var cats = [];
+            angular.forEach( res.data, function( value, key ) {
+                cats.push(value);
+            });
+            localStorageService.set( 'cats', cats );
+        });
+
+        /** State Change Logging **/
+        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
+            //console.log( 'from ',fromState );
+            //console.log( 'to ', toState );
+        });
     })
     .config(
         ['localStorageServiceProvider', 'paginationTemplateProvider', '$stateProvider', '$urlRouterProvider',
@@ -16,11 +31,6 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                 controller:'listView',
                 templateUrl: 'templates/list.html'
             })
-            .state('single',{
-                url:'/:cpt/:slug',
-                controller:'singleView',
-                templateUrl: 'templates/single.html'
-            })
             .state('author',{
                 url:'/author/:author',
                 controller:'authorView',
@@ -30,6 +40,11 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
                 url:'/category/:term',
                 controller: 'termView',
                 templateUrl: 'templates/list.html'
+            })
+            .state('single',{
+                url:'/:cpt/:slug',
+                controller:'singleView',
+                templateUrl: 'templates/single.html'
             })
     }])
     .filter( 'to_trusted', function( $sce ){
@@ -48,6 +63,15 @@ ngWP.app = angular.module( 'angular-front-end', ['ngResource', 'ui.router', 'Loc
             $http.get(ngWP.config.api + 'wp/v2/users/' + $scope.post.author ).then(function(res){
                 $scope.author = res.data;
             });
+            if( $scope.post.categories.length ) {
+                var cats = localStorageService.get('cats');
+                $scope.cats = [];
+                angular.forEach( cats, function( value, key ) {
+                    if( $scope.post.categories.indexOf( value.id ) > -1 ) {
+                        $scope.cats.push( value );
+                    }
+                });
+            }
         });
 
     }])
