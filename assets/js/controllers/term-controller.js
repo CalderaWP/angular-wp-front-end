@@ -11,7 +11,7 @@ ngWP.app.controller('termView', ['$scope', '$http', 'LocalPosts', 'localStorageS
                 $scope.term = value;
             }
         });
-        LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3], category: $scope.term.id}).then(function(res){
+        LocalPosts.query({per_page: [ngWP.config.posts_per_page * 3], categories: $scope.term.id}).then(function(res){
             $scope.total_posts = res.total_posts;
             $scope.posts = res.posts;
             $scope.pagination = {
@@ -38,8 +38,8 @@ ngWP.app.controller('termView', ['$scope', '$http', 'LocalPosts', 'localStorageS
             $scope.total_available_pages = Math.ceil( $scope.total_posts / ngWP.config.posts_per_page );
 
             if (newPage == $scope.total_current_pages && $scope.total_current_pages < $scope.total_available_pages ) {
-                LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3, post_type: $scope.post_type, category: $scope.term.id}).then(function (new_posts) {
-                    angular.forEach(new_posts, function (value, key) {
+                LocalPosts.getPage({page: $scope.next_page, per_page: ngWP.config.posts_per_page * 3, post_type: $scope.post_type, categories: $scope.term.id}).then(function (new_posts) {
+                    angular.forEach(new_posts.posts, function (value, key) {
                         $scope.posts.push(value);
                     });
                 });
